@@ -7,7 +7,7 @@
   --aqua: #83edcf;
   --skye: #86dce9;
   --snow: #83c4e6;
-  --blue: #7796df;
+  --blue: #3369e6;
   --purple: #8b79e8;
   --violet: #b37fed;
   --pink: #f186ed;
@@ -36,8 +36,8 @@
 body {
   background: linear-gradient(
     to bottom left,
-    var(--green) 0%,
-    var(--green) 32.95%,
+    var(--blue) 0%,
+    var(--blue) 32.95%,
     var(--base) 33%,
     var(--base) 100%
   );
@@ -90,7 +90,7 @@ main {
   flex-direction: column;
   gap: 2rem;
   padding: 2rem;
-  max-width: 600px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -114,7 +114,7 @@ main {
 }
 
 .hero-warning {
-  color: var(--yellow);
+  color: var(--cherry);
   border-radius: 0.75rem;
   padding: 0.75rem;
   font-size: 0.9rem;
@@ -141,8 +141,8 @@ main {
 }
 
 .btn.primary {
-  background: var(--green);
-  color: var(--base);
+  background: var(--blue);
+  color: var(--text);
 }
 
 .btn:hover {
@@ -213,6 +213,14 @@ main {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
+  position: relative;
+}
+
+.priority-star {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-size: 1.25rem;
 }
 
 .user-avatar {
@@ -227,13 +235,23 @@ main {
   display: inline-block;
 }
 
+.user-details {
+  width: 100%;
+}
+
 .user-name {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-handle {
   font-size: 0.85rem;
   color: var(--subtext1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

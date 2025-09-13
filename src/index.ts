@@ -3,7 +3,7 @@ import type { Did } from "@atcute/lexicons";
 import { AppBskyActorProfile } from "@atcute/bluesky";
 
 const client = new Client({
-  handler: simpleFetchHandler({ service: "https://pds.tgirl.cloud" }),
+  handler: simpleFetchHandler({ service: "https://pds.indexx.dev" }),
 });
 
 async function getRepos(
@@ -34,9 +34,12 @@ export interface UserProfile {
   handle: string;
   displayName?: string;
   avatar?: string;
+  prioritized: boolean;
 }
 
-async function getUsersProfile(did: Did): Promise<UserProfile | undefined> {
+async function getUsersProfile(
+  did: Did,
+): Promise<Omit<UserProfile, "prioritized"> | undefined> {
   const responseRec = await client.get("com.atproto.repo.getRecord", {
     params: {
       repo: did,
@@ -51,12 +54,12 @@ async function getUsersProfile(did: Did): Promise<UserProfile | undefined> {
     return undefined;
   }
 
-  let user = responseRec.data.value as AppBskyActorProfile.Main;
+  const user = responseRec.data.value as AppBskyActorProfile.Main;
 
   let avatar: string | undefined = undefined;
   if (user.avatar) {
-    // @ts-ignore
-    let av = user.avatar.ref["$link"];
+    // @ts-expect-error: Error
+    const av = user.avatar.ref["$link"];
     avatar = `https://cdn.bsky.app/img/feed_thumbnail/plain/${did}/${av}`;
   }
 
@@ -78,20 +81,40 @@ async function getUsersProfile(did: Did): Promise<UserProfile | undefined> {
   };
 }
 
-export async function getPdsUsers() {
+export async function getPdsUsers(): Promise<UserProfile[]> {
   const repos = await getRepos();
+  const prioritizedDidsList = [
+    "did:plc:sfjxpxxyvewb2zlxwoz2vduw",
+    "did:plc:zl4ugdpxfgrzlr5uz2nm7kcq",
+    "did:plc:wfa54mpcbngzazwne3piz7fp",
+  ];
+  const prioritizedDidsSet = new Set(prioritizedDidsList);
 
-  const profiles = [];
-  for (const did of repos) {
+  const prioritizedProfilesMap = new Map<Did, UserProfile>();
+  const otherProfiles: UserProfile[] = [];
+
+  const promises = repos.map(async (did) => {
     const profile = await getUsersProfile(did);
-    if (profile) profiles.push(profile);
-  }
+    if (profile) {
+      if (prioritizedDidsSet.has(did)) {
+        prioritizedProfilesMap.set(did, { ...profile, prioritized: true });
+      } else {
+        otherProfiles.push({ ...profile, prioritized: false });
+      }
+    }
+  });
 
-  return profiles;
+  await Promise.all(promises);
+
+  const prioritizedProfiles = prioritizedDidsList
+    .map((did) => prioritizedProfilesMap.get(did as `did:${string}:${string}`))
+    .filter((p): p is UserProfile => p !== undefined);
+
+  return [...prioritizedProfiles, ...otherProfiles];
 }
 
 export async function getVersion(): Promise<string> {
-  const response = await fetch("https://pds.tgirl.cloud/xrpc/_health");
+  const response = await fetch("https://pds.indexx.dev/xrpc/_health");
 
   if (!response.ok) {
     console.error("failed to get records count from pds");
